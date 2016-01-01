@@ -34,8 +34,8 @@ admin.site.register(PartnerProfile, PartnerProfileAdmin)
     
 class ConnectedHistoryAdmin(admin.ModelAdmin):
     model = ConnectedHistory
-    list_display = ('id', 'user', 'partner', 'connected_at', 'ip', 'device_os', 'device_name', 'created_at')
-    search_fields = ('user__username', 'partner__venue_name', 'ip', 'device_os', 'device_name')
-    ordering = ('-connected_at',)
+    list_display = ('id', 'user', 'partner', 'ip', 'device_os', 'device_name','device_brand', 'created_at')
+    search_fields = ('user__username', 'partner__venue_name', 'ip', 'device_os', 'device_name','device_brand')
+    ordering = ('-created_at',)
     
 admin.site.register(ConnectedHistory, ConnectedHistoryAdmin)
