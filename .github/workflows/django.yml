@@ -14,11 +14,10 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Deploy to server
-      env:
-        PEM_PRIVATE_KEY: ${{ secrets.PEM_FILE }}
       run: |
-        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-            -i <(echo "$PEM_PRIVATE_KEY") ubuntu@${{ secrets.SERVER_URL }} << 'EOF'
+        echo "${{ secrets.PEM_FILE }}" > private_key.pem
+        chmod 600 private_key.pem
+        ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@${{ secrets.SERVER_URL }} << 'EOF'
           cd /home/ubuntu/projects/
           rm -rf y_fi_backend
           git clone https://github.com/snigdho48/y_fi_backend.git y_fi_backend
@@ -29,3 +28,4 @@ jobs:
           sudo systemctl restart gunicorn
           sudo systemctl restart nginx
         EOF
+        rm -f private_key.pem  # Cleanup after execution
