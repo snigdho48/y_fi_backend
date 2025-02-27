@@ -3,18 +3,16 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - main  # Trigger the action when changes are pushed to the main branch.
+      - master  
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
     steps:
-    # Check out the repository
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    # Set up SSH key from PEM secret
     - name: Set up SSH key from PEM secret
       run: |
         mkdir -p ~/.ssh
@@ -22,34 +20,26 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H $SERVER_URL >> ~/.ssh/known_hosts  # Use SERVER_URL secret here
 
-    # Deploy to server
     - name: Deploy to server
       run: |
-        # Connect to the server, remove old project, and deploy new one
         ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@$SERVER_URL << 'EOF'
-          # Navigate to the project directory
+
           cd /home/ubuntu/projects/
           
-          # Remove the old project (Be cautious, ensure you're deleting the right project directory)
           rm -rf y_fi_backend
 
-          # Clone the latest version of the project from GitHub
           git clone https://github.com/snigdho48/y_fi_backend.git y_fi_backend
 
-          # Navigate into the project directory
           cd y_fi_backend
 
-          # Install dependencies (if you're using a virtual environment)
           python3 -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
 
-          # Restart Gunicorn and Nginx (or your web server)
           sudo systemctl restart gunicorn
           sudo systemctl restart nginx
         EOF
 
-    # Optional: Upload build logs (you can customize this part)
     - name: Upload build logs
       uses: actions/upload-artifact@v2
       with:
