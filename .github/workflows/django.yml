@@ -28,5 +28,6 @@ jobs:
           sudo systemctl daemon-reload
           sudo systemctl restart gunicorn
           sudo systemctl restart nginx
+          eco "Deployment successful"
         EOF
         rm -f private_key.pem  # Cleanup after execution
