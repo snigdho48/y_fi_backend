@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - master  # Trigger deployment on push to the master branch
+      - master
 
 jobs:
   deploy:
@@ -14,19 +14,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up SSH key using ssh-agent
+    - name: Set up SSH key from PEM secret
       run: |
         mkdir -p ~/.ssh
         echo "$PEM_FILE" > ~/.ssh/id_rsa  # Write PEM secret to id_rsa file
         chmod 600 ~/.ssh/id_rsa  # Set correct file permissions
-        eval $(ssh-agent -s)  # Start ssh-agent
-        ssh-add ~/.ssh/id_rsa  # Add the private key to ssh-agent
         ssh-keyscan -H ${{ secrets.SERVER_URL }} >> ~/.ssh/known_hosts  # Add server's SSH key to known_hosts
 
     - name: Deploy to server
       run: |
-        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_URL }} << 'EOF'
-          
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_URL }} << 'EOF'
           cd /home/ubuntu/projects/
 
           rm -rf y_fi_backend  # Remove the old project
