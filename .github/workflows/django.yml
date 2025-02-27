@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - master
+      - master  # Trigger deployment on push to the master branch
 
 jobs:
   deploy:
@@ -19,11 +19,13 @@ jobs:
         mkdir -p ~/.ssh
         echo "$PEM_PRIVATE_KEY" | base64 --decode > ~/.ssh/id_rsa  # Decode the base64 key and save it
         chmod 600 ~/.ssh/id_rsa  # Set correct permissions
-        ssh-keyscan -H ${{ secrets.SERVER_URL }} >> ~/.ssh/known_hosts  # Add the server's SSH key to known_hosts
+        # Add the server's SSH key to known_hosts to avoid the "yes/no" prompt
+        ssh-keyscan -H ${{ secrets.SERVER_URL }} >> ~/.ssh/known_hosts
 
     - name: Deploy to server
       run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.SERVER_URL }} << 'EOF'
+        # Non-interactive SSH with proper key handling
+        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_rsa ubuntu@${{ secrets.SERVER_URL }} << 'EOF'
           cd /home/ubuntu/projects/
           rm -rf y_fi_backend
           git clone https://github.com/snigdho48/y_fi_backend.git y_fi_backend
