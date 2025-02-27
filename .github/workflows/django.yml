@@ -24,10 +24,8 @@ jobs:
           cd y_fi_backend
           python3 -m venv venv
           source venv/bin/activate
-          git checkout master
-          pip install --upgrade pip
-          ls
           pip install -r requirements.txt
+          systemctl daemon-reload
           sudo systemctl restart gunicorn
           sudo systemctl restart nginx
         EOF
