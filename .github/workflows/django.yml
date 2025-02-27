@@ -22,6 +22,11 @@ jobs:
         # Add the server's SSH key to known_hosts to avoid the "yes/no" prompt
         ssh-keyscan -H ${{ secrets.SERVER_URL }} >> ~/.ssh/known_hosts
 
+    - name: Add SSH private key to agent
+      run: |
+        eval $(ssh-agent -s)  # Start the ssh-agent
+        ssh-add ~/.ssh/id_rsa  # Add the private key to the agent
+
     - name: Deploy to server
       run: |
         # Non-interactive SSH with proper key handling
