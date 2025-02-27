@@ -3,36 +3,48 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - master
+      - master  # Trigger deployment on push to the master branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-
+    
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up SSH agent and key from PEM secret
+    - name: Set up SSH key from PEM secret
       run: |
         mkdir -p ~/.ssh
-        echo "$PEM_FILE" > ~/.ssh/id_rsa
+        echo "$PEM_FILE" > ~/.ssh/id_rsa  # Use the PEM secret directly
         chmod 600 ~/.ssh/id_rsa
-        eval $(ssh-agent -s)
-        ssh-add ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.SERVER_URL }} >> ~/.ssh/known_hosts
+        ssh-keyscan -H ${{ secrets.SERVER_URL }} >> ~/.ssh/known_hosts  # Use SERVER_URL secret here
 
     - name: Deploy to server
       run: |
-        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ secrets.SERVER_URL }} << 'EOF'
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_URL }} << 'EOF'
+          
+          # Navigate to the project directory
           cd /home/ubuntu/projects/
+
+          # Remove the old project
           rm -rf y_fi_backend
+
+          # Clone the latest version from GitHub
           git clone https://github.com/snigdho48/y_fi_backend.git y_fi_backend
+
+          # Navigate to the project folder
           cd y_fi_backend
+
+          # Set up Python virtual environment and install dependencies
           python3 -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
+
+          # Restart the Gunicorn service to apply the changes
           sudo systemctl restart gunicorn
+
+          # Restart the Nginx service to reflect the changes
           sudo systemctl restart nginx
         EOF
