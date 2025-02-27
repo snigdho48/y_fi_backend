@@ -10,8 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+    
+    - name: Clone repository
+      run: |
+        git clone https://github.com/snigdho48/y_fi_backend.git
+        cd y_fi_backend
+        git checkout master
 
     - name: Set up SSH key from PEM secret
       run: |
@@ -40,8 +44,4 @@ jobs:
           sudo systemctl restart nginx
         EOF
 
-    - name: Upload build logs
-      uses: actions/upload-artifact@v2
-      with:
-        name: build-logs
-        path: build.log
+
