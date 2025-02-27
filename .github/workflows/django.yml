@@ -20,10 +20,12 @@ jobs:
         echo "$PEM_FILE" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.SERVER_URL }} >> ~/.ssh/known_hosts
+        eval $(ssh-agent -s)
+        ssh-add ~/.ssh/id_rsa
 
     - name: Deploy to server
       run: |
-        ssh -vvv -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_rsa ubuntu@${{ secrets.SERVER_URL }} << 'EOF'
+        ssh -vvv -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ secrets.SERVER_URL }} << 'EOF'
           cd /home/ubuntu/projects/
           rm -rf y_fi_backend
           git clone https://github.com/snigdho48/y_fi_backend.git y_fi_backend
