@@ -17,15 +17,11 @@ jobs:
     - name: Set up SSH key from GitHub Secrets
       run: |
         mkdir -p ~/.ssh
-        echo "$PEM_PRIVATE_KEY" | base64 --decode > ~/.ssh/id_rsa  # Decode the base64 key and save it
-        chmod 600 ~/.ssh/id_rsa  # Set correct permissions
+        # Write the PEM key directly from GitHub secrets into the id_rsa file
+        echo "$PEM_FILE" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa  # Ensure correct file permissions
         # Add the server's SSH key to known_hosts to avoid the "yes/no" prompt
         ssh-keyscan -H ${{ secrets.SERVER_URL }} >> ~/.ssh/known_hosts
-
-    - name: Add SSH private key to agent
-      run: |
-        eval $(ssh-agent -s)  # Start the ssh-agent
-        ssh-add ~/.ssh/id_rsa  # Add the private key to the agent
 
     - name: Deploy to server
       run: |
