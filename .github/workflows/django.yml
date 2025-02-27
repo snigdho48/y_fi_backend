@@ -19,11 +19,9 @@ jobs:
         echo "${{ secrets.PEM_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.SERVER_URL }} >> ~/.ssh/known_hosts
+        ssh-add ~/.ssh/id_rsa  
 
-    - name: Add SSH private key to agent
-      run: |
-        eval $(ssh-agent -s)
-        ssh-add ~/.ssh/id_rsa  # Should now work correctly
+
 
     - name: Deploy to server
       run: |
