@@ -3,8 +3,7 @@
 **pycache**/
 _.py[cod]
 _$py.class
-\*db.sqlite3
-\db.sqlite3
+
 \migrations
 # C extensions
 
@@ -71,7 +70,6 @@ _.pot
 
 \*.log
 local_settings.py
-db.sqlite3
 
 # Flask stuff:
 

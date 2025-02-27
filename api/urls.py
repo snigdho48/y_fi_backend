@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 apidoc_urlpatterns = [
   path('schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('doctest/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('test/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
