@@ -13,7 +13,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField(blank=True, null=True,unique=True)  # Not unique
 
     USERNAME_FIELD = 'email'  # Authenticate using username
-    REQUIRED_FIELDS = ['username']  # Required fields for user creation
+    REQUIRED_FIELDS = []  # Required fields for user creation
 
     def __str__(self):
         return self.username
@@ -27,8 +27,8 @@ class UserProfile(models.Model):
     device_name = models.CharField(max_length=100, blank=True, null=True)
     device_os = models.CharField(max_length=100, blank=True, null=True)
     device_brand = models.CharField(max_length=100, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=get_current_time, editable=False)
+    updated_at = models.DateTimeField(default=get_current_time, editable=False)
 
     def __str__(self):
         return self.user.username
@@ -42,11 +42,12 @@ class PartnerProfile(models.Model):
     ssid = models.CharField(max_length=255)
     code = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=get_current_time, editable=False)
+    updated_at = models.DateTimeField(default=get_current_time, editable=False)
     
     def __str__(self):
         return f'{self.venue_name} - {self.user.username}'
+
     
 class ConnectedHistory(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -56,9 +57,11 @@ class ConnectedHistory(models.Model):
     ip = models.GenericIPAddressField()
     device_os = models.CharField(max_length=100)
     device_name = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    device_brand = models.CharField(max_length=100)
+    device_id = models.CharField(max_length=255)
+    created_at = models.DateTimeField(default=get_current_time)
     
     def __str__(self):
         return f'{self.user.username} - {self.partner.venue_name}'
+
     

@@ -16,7 +16,12 @@ urlpatterns = [
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/logout/', LogoutAPIView.as_view(), name='logout'),
     
-  # User API
+  # Venue Data API
+    path('venue/data/', VenueDataView.as_view(), name='venue_data'),
+    path('venue/create/', CreatePartnerProfileView.as_view(), name='create_venue'),
+    
+  # Data Collect API
+    path('data/collect/', DataCollectView.as_view(), name='data_collect'),
 
 ] + apidoc_urlpatterns
 

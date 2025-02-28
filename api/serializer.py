@@ -19,15 +19,13 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
     def validate(self, attrs,):
-        username = self.initial_data['username'] or ''
+        username = self.initial_data.get('username', '')
         email = attrs.get("email")
-        device_id = self.initial_data['device_id'] or ''
-        device_name = self.initial_data['device_name'] or ''
-        device_os = self.initial_data['device_os'] or ''
-        device_brand = self.initial_data['device_brand'] or ''
+        device_id = self.initial_data.get('device_id','') 
+        device_name = self.initial_data.get('device_name','') 
+        device_os = self.initial_data.get('device_os','')
+        device_brand = self.initial_data.get('device_brand','')
         password = attrs.get("password")
-        if not username:
-                raise serializers.ValidationError({"error": "Username is required"})
         if not email:
             raise serializers.ValidationError({"error": "Email is required"})
 
@@ -68,7 +66,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField()
+    username = serializers.CharField(required=False)
     password = serializers.CharField(write_only=True)
     email = serializers.EmailField()
     class Meta:
@@ -79,5 +77,33 @@ class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     class Meta:
         model = UserProfile
-        fields = ('uuid', 'user', 'device_id', 'phone_number', 'device_name', 'device_os', 'created_at', 'updated_at')
+        fields = ('uuid', 'user', 'device_id', 'phone_number', 'device_name', 'device_os','device_brand', 'created_at', 'updated_at')
         
+class PartnerProfileSerializer(serializers.ModelSerializer):
+    user_id = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), source='user', write_only=True)
+    username = serializers.CharField(required=False,write_only=True,source='user.username')
+    userpassword = serializers.CharField(write_only=True,source='user.password')
+    email = serializers.EmailField(write_only=True,source='user.email')
+    user = UserSerializer(read_only=True)
+    class Meta:
+        model = PartnerProfile
+        fields = ('uuid', 'user','user_id','username','userpassword','email', 'venue_name','code', 'address', 'phone_number', 'ssid', 'code', 'password', 'created_at', 'updated_at')
+        
+class CustomPartnerProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    class Meta:
+        model = PartnerProfile
+        fields = ('uuid', 'user', 'venue_name')
+        
+class CustomUserProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    class Meta:
+        model = UserProfile
+        fields = ('uuid', 'user')
+
+class ConnectedHistorySerializer(serializers.ModelSerializer):
+    user = CustomPartnerProfileSerializer()
+    partner = CustomPartnerProfileSerializer()
+    class Meta:
+        model = ConnectedHistory
+        fields = ('uuid', 'user', 'partner', 'connected_at', 'ip', 'device_os', 'device_name','device_id', 'created_at')
