@@ -25,5 +25,5 @@ class ReleaseAppViewSet(APIView):
         # Return the APK file URL (adjust URL if needed based on your media file serving configuration)
         # get server name from request
         server_name = request.get_host()
-        file_url = f'https://{server_name}:8888{apps.app.url}'
+        file_url = f'https://{server_name}{apps.app.url}'
         return Response({'url': file_url}, status=status.HTTP_200_OK)
