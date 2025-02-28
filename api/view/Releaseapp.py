@@ -23,5 +23,7 @@ class ReleaseAppViewSet(APIView):
             return Response({'error': 'APK file not found'}, status=status.HTTP_404_NOT_FOUND)
 
         # Return the APK file URL (adjust URL if needed based on your media file serving configuration)
-        file_url = f'https://ec2-3-108-205-134.ap-south-1.compute.amazonaws.com/media/apps/{apps.app.name}.apk'
+        # get server name from request
+        server_name = request.get_host()
+        file_url = f'https://{server_name}{apps.app.url}'
         return Response({'url': file_url}, status=status.HTTP_200_OK)
