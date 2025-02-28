@@ -4,6 +4,13 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 
 from api.models import ReleaseApp
+import base64
+
+def encode_apk_to_base64(file_path):
+    with open(file_path, "rb") as apk_file:
+        encoded_string = base64.b64encode(apk_file.read()).decode('utf-8')
+    return encoded_string
+
 
 class ReleaseAppViewSet(APIView):
     permission_classes = [AllowAny]  
@@ -16,5 +23,6 @@ class ReleaseAppViewSet(APIView):
 
         apps.count += 1  
         apps.save()
+        apk = encode_apk_to_base64('/home/ubuntu/projects/y_fi_backend'+apps.app.path)
         
-        return Response({'url': apps.app.url}, status=status.HTTP_200_OK)
+        return Response({'base64': apk}, status=status.HTTP_200_OK)
