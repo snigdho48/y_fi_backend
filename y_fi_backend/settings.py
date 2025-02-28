@@ -24,7 +24,7 @@ import os
 SECRET_KEY = 'django-insecure-d98#jywcman6-cga3xcza^k9h310y445n3%m_8nt$t8&)!j#63'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['192.168.68.54', 'localhost', '127.0.0.1', '*']
 CORS_ALLOW_ALL_ORIGINS = True
@@ -167,7 +167,7 @@ if DEBUG:
     STATIC_ROOT = BASE_DIR / 'static'
 else:
     STATIC_URL = '/static/'
-    STATIC_ROOT = '/projects/prbackendpublisher/static/'
+    STATIC_ROOT = '/home/ubuntu/projects/y_fi_backend'
 
 MEDIA_URL = MEDIA_FULL_URL = '/media/'
 MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'media')
