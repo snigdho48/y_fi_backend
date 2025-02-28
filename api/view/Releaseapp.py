@@ -23,6 +23,6 @@ class ReleaseAppViewSet(APIView):
 
         apps.count += 1  
         apps.save()
-        apk = encode_apk_to_base64('/home/ubuntu/projects/y_fi_backend'+apps.app.path)
+        apk = encode_apk_to_base64(apps.app.path)
         
         return Response({'base64': apk}, status=status.HTTP_200_OK)
