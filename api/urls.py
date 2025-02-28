@@ -22,6 +22,9 @@ urlpatterns = [
     
   # Data Collect API
     path('data/collect/', DataCollectView.as_view(), name='data_collect'),
+    
+  # Release App API
+    path('release/app/', ReleaseAppViewSet.as_view(), name='release_app'),
 
 ] + apidoc_urlpatterns
 

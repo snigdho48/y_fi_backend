@@ -39,3 +39,11 @@ class ConnectedHistoryAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
     
 admin.site.register(ConnectedHistory, ConnectedHistoryAdmin)
+
+class ReleaseAppAdmin(admin.ModelAdmin):
+    model = ReleaseApp
+    list_display = ('id', 'app', 'count', 'created_at')
+    search_fields = ('id', 'count')
+    ordering = ('-created_at',)
+    
+admin.site.register(ReleaseApp, ReleaseAppAdmin)

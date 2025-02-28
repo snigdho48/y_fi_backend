@@ -62,5 +62,13 @@ class ConnectedHistory(models.Model):
     
     def __str__(self):
         return f'{self.user.username} - {self.partner.venue_name}'
+    
+class ReleaseApp(models.Model):
+    app = models.FileField(upload_to='apps/')
+    count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(default=get_current_time)
+    
+    def __str__(self):
+        return self.created_at.strftime('%Y-%m-%d %H:%M:%S')
 
     

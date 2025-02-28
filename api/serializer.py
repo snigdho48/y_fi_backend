@@ -115,3 +115,7 @@ class CustomConnectedHistorySerializer(serializers.ModelSerializer):
         model = ConnectedHistory
         fields = ('uuid', 'user', 'partner', 'ip', 'device_os', 'device_name','device_id','device_brand', 'created_at')
     
+class ReleaseAppSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReleaseApp
+        fields = '__all__'
