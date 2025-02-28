@@ -25,6 +25,13 @@ jobs:
           python3 -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
+          sudo chown -R www-data:www-data /home/ubuntu/projects/y_fi_backend/static
+          sudo chown -R www-data:www-data /home/ubuntu/projects/y_fi_backend/media
+          sudo chmod -R 755 /home/ubuntu/projects/y_fi_backend/static
+          sudo chmod -R 755 /home/ubuntu/projects/y_fi_backend/media
+          sudo chmod 755 /home/ubuntu/projects
+          sudo chmod 755 /home/ubuntu
+          sudo chmod 755 /home
           sudo systemctl daemon-reload
           sudo systemctl restart gunicorn
           sudo systemctl restart nginx
