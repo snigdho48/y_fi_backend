@@ -110,8 +110,8 @@ class ConnectedHistorySerializer(serializers.ModelSerializer):
         
 class CustomConnectedHistorySerializer(serializers.ModelSerializer
     ):
-    user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), source='user', write_only=True)
-    partner = serializers.PrimaryKeyRelatedField(queryset=PartnerProfile.objects.all(), source='partner', write_only=True)
+    user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), write_only=True)
+    partner = serializers.PrimaryKeyRelatedField(queryset=PartnerProfile.objects.all(), write_only=True)
     class Meta:
         model = ConnectedHistory
         fields = ('uuid', 'user', 'partner', 'connected_at', 'ip', 'device_os', 'device_name','device_id', 'created_at')
