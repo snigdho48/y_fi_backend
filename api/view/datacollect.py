@@ -4,7 +4,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from api.serializer import ConnectedHistorySerializer
+from api.serializer import CustomConnectedHistorySerializer
 
 
 class DataCollectView(APIView):
@@ -12,11 +12,13 @@ class DataCollectView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        request=ConnectedHistorySerializer,
-        responses={200: OpenApiResponse(response=ConnectedHistorySerializer)}
+        request=CustomConnectedHistorySerializer,
+        responses={200: OpenApiResponse(response=CustomConnectedHistorySerializer)}
     )
     def post(self, request):
-        serializer = ConnectedHistorySerializer(data=request.data)
+        
+        request.data['user'] = request.user.id
+        serializer = CustomConnectedHistorySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
