@@ -63,6 +63,56 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         data.pop('access')
 
         return data
+class MyTokenObtainPartnerPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['username'] = user.username
+        token['email'] = user.email
+        token['user_groups'] = [group.name for group in user.groups.all()]
+        return token
+
+    def validate(self, attrs,):
+        username = self.initial_data.get('username', '')
+        email = attrs.get("email")
+        password = attrs.get("password")
+        if not email:
+            raise serializers.ValidationError({"error": "Email is required"})
+
+        if not password:
+            raise serializers.ValidationError({"error": "Password is required"})
+        
+        # Check if user exists by email
+        user = CustomUser.objects.filter(email=email).first()
+        print(user)
+
+        if not user:
+            # Create the user with a hashed password
+            user = CustomUser.objects.create_user(username=username, email=email, password=password)
+
+            # Assign the user to a default group (optional)
+            group, _ = Group.objects.get_or_create(name='partner')
+            user.groups.add(group)
+            user.save()
+            partnerprofile = PartnerProfile.objects.create(user=user)
+            partnerprofile.save()
+            
+            
+        user = authenticate(email=email, password=password)
+        print(user.email)
+
+        if not user:
+            raise serializers.ValidationError({"error": "Invalid credentials"})
+
+        # Generate token
+        data = super().validate(attrs)
+        data['username'] = user.username
+        data['email'] = user.email
+        data['user_group'] = user.groups.all().first().name if user.groups.exists() else None
+        data['token'] = str(data['access'])
+        data.pop('access')
+
+        return data
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -81,14 +131,35 @@ class UserProfileSerializer(serializers.ModelSerializer):
         
 class PartnerProfileSerializer(serializers.ModelSerializer):
     user_id = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), source='user', write_only=True)
-    username = serializers.CharField(required=False,write_only=True,source='user.username')
-    userpassword = serializers.CharField(write_only=True,source='user.password')
-    email = serializers.EmailField(write_only=True,source='user.email')
+    username = serializers.CharField(required=False,write_only=True)
+    userpassword = serializers.CharField(write_only=True)
+    email = serializers.EmailField(write_only=True)
     user = UserSerializer(read_only=True)
     class Meta:
         model = PartnerProfile
         fields = ("id",'uuid', 'user','user_id','username','userpassword','email', 'venue_name','code', 'address', 'phone_number', 'ssid', 'code', 'password', 'created_at', 'updated_at')
         
+    def validate(self, data):
+        username = data.get('username')
+        email = data.get('email')
+        userpassword = data.get('userpassword')
+        if not username:
+            raise serializers.ValidationError({"error": "Username is required"})
+        if not email:
+            raise serializers.ValidationError({"error": "Email is required"})
+        if not userpassword:
+            raise serializers.ValidationError({"error": "Password is required"})
+        user = CustomUser.objects.filter(email=email).first()
+        if user:
+            raise serializers.ValidationError({"error": "User already exists"})
+        user = CustomUser.objects.create_user(username=username, email=email, password=userpassword)
+        group, _ = Group.objects.get_or_create(name='partner')
+        user.groups.add(group)
+        user.save()
+        partnerprofile = PartnerProfile.objects.create(user=user, venue_name=data.get('venue_name'), code=data.get('code',''), address=data.get('address',''), phone_number=data.get('phone_number',''), ssid=data.get('ssid',''), password=data.get('password',''))
+        partnerprofile.save()
+        data['user'] = user
+        return data
 class CustomPartnerProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     class Meta:

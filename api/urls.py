@@ -15,6 +15,8 @@ urlpatterns = [
     path('auth/login/', MyTokenObtainPairView.as_view(), name='login'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/logout/', LogoutAPIView.as_view(), name='logout'),
+    path('auth/partner/login/', PartnerTokenObtainPairView.as_view(), name='partner_login'),
+    path('auth/partner/register/', PartnerRegistrationView.as_view(), name='partner_register'),
     
   # Venue Data API
     path('venue/data/', VenueDataView.as_view(), name='venue_data'),
