@@ -130,9 +130,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ('uuid', 'user', 'device_id', 'phone_number', 'device_name', 'device_os','device_brand', 'created_at', 'updated_at')
         
 class PartnerProfileSerializer(serializers.ModelSerializer):
-    user_id = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), source='user', write_only=True)
+    user_id = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), source='user', write_only=True,required=False)
     username = serializers.CharField(required=False,write_only=True)
-    userpassword = serializers.CharField(write_only=True)
+    userpassword = serializers.CharField(write_only=True,required=False)
     email = serializers.EmailField(write_only=True)
     user = UserSerializer(read_only=True)
     class Meta:
@@ -140,9 +140,9 @@ class PartnerProfileSerializer(serializers.ModelSerializer):
         fields = ("id",'uuid', 'user','user_id','username','userpassword','email', 'venue_name','code', 'address', 'phone_number', 'ssid', 'code', 'password', 'created_at', 'updated_at')
         
     def validate(self, data):
-        username = data.get('username')
-        email = data.get('email')
-        userpassword = data.get('userpassword')
+        username = data.pop('username')
+        email = data.pop('email')
+        userpassword = data.pop('userpassword')
         if not username:
             raise serializers.ValidationError({"error": "Username is required"})
         if not email:

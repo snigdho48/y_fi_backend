@@ -39,9 +39,9 @@ class PartnerProfile(models.Model):
     venue_name = models.CharField(max_length=255,null=True,blank=True)
     address = models.TextField(null=True,blank=True)
     phone_number = models.CharField(max_length=15, null=True,blank=True)
-    ssid = models.CharField(max_length=255)
-    code = models.CharField(max_length=255)
-    password = models.CharField(max_length=255)
+    ssid = models.CharField(max_length=255,null=True,blank=True)
+    code = models.CharField(max_length=255,null=True,blank=True)
+    password = models.CharField(max_length=255,null=True,blank=True)
     created_at = models.DateTimeField(default=get_current_time, editable=False)
     updated_at = models.DateTimeField(default=get_current_time, editable=False)
     
