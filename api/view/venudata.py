@@ -35,29 +35,5 @@ class VenueDataView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 
-class CreatePartnerProfileView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
 
-    @extend_schema(
-        request=PartnerProfileSerializer,
-        responses={200: OpenApiResponse(response=PartnerProfileSerializer)}
-    )
-    def post(self, request):
-        if not request.user.groups.filter(name='admin').exists():
-            return Response({"error": "You do not have permission to create a partner profile"}, status=status.HTTP_403_FORBIDDEN)
-        user= CustomUser.objects.create_user(username=request.data.get('username',' '), email=request.data.get('email'), password=request.data.get('password'))
-        group, _ = Group.objects.get_or_create(name='partner')
-        user.groups.add(group)
-        user.save()
-        
-        
-        request.data['user_id']=user.id
-        
-        
 
-        serializer = PartnerProfileSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

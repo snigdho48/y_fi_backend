@@ -1,33 +1,74 @@
 
 from rest_framework_simplejwt.views import TokenObtainPairView
-from api.serializer import MyTokenObtainPairSerializer, MyTokenObtainPartnerPairSerializer,PartnerProfileSerializer
+from api.serializer import MyTokenObtainPairSerializer, MyTokenObtainPartnerPairSerializer,PartnerProfileSerializer,CustomPartnerProfileSerializerRegister
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+from api.models import CustomUser
+from django.contrib.auth.models import Group
+from rest_framework_simplejwt.tokens import RefreshToken
+
 
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+  
 
 class PartnerTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPartnerPairSerializer
+    
+    
     
 class PartnerRegistrationView(APIView):
     authentication_classes = []
     permission_classes = []
     @extend_schema(
         request=PartnerProfileSerializer,
-        responses=PartnerProfileSerializer
+        responses={200: OpenApiResponse(response=MyTokenObtainPartnerPairSerializer)}
     )
-    def post(self,request):
-        serializer = PartnerProfileSerializer(data=request.data)
+    def post(self, request):
+        if not request.data.get('email') or not request.data.get('userpassword'):
+            return Response({"error": " Email and Password are required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = CustomUser.objects.get(email=request.data.get('email'))
+            return Response({"error": "User already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        except CustomUser.DoesNotExist:
+
+            user = CustomUser.objects.create_user(
+                    username=request.data.get('username', ''),
+                    email=request.data.get('email'),
+                    password=request.data.get('userpassword')  # Fix field name
+                )
+            group, _ = Group.objects.get_or_create(name='partner')
+            user.groups.add(group)
+            user.save()
+            
+            
+            request.data['user']=user.id
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST   )
+        
+        
+        password=request.data.pop('userpassword')
+        email=request.data.pop('email')
+        request.data.pop('username')
+        serializer = CustomPartnerProfileSerializerRegister(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({"message":"Partner registered successfully"},status=status.HTTP_201_CREATED)
-        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)   
+            refresh = RefreshToken.for_user(user)
+            data = {
+                'token': str(refresh.access_token),
+                'username': user.username,
+                'email': user.email,
+                'user_group': user.groups.first().name if user.groups.exists() else None,
+            }
+            return Response(data, status=status.HTTP_200_OK)
+        
+        user.delete()
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
         
 

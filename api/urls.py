@@ -20,7 +20,6 @@ urlpatterns = [
     
   # Venue Data API
     path('venue/data/', VenueDataView.as_view(), name='venue_data'),
-    path('venue/create/', CreatePartnerProfileView.as_view(), name='create_venue'),
     
   # Data Collect API
     path('data/collect/', DataCollectView.as_view(), name='data_collect'),
