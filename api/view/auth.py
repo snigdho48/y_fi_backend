@@ -5,7 +5,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.utils import extend_schema, OpenApiResponse,OpenApiExample
 from api.models import CustomUser
 from django.contrib.auth.models import Group
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -27,7 +27,27 @@ class PartnerRegistrationView(APIView):
     permission_classes = []
     @extend_schema(
         request=PartnerProfileSerializer,
-        responses={200: OpenApiResponse(response=MyTokenObtainPartnerPairSerializer)}
+        responses={200: OpenApiResponse(response=MyTokenObtainPartnerPairSerializer),400: OpenApiResponse(response={
+            "type": "object",
+            "properties": {
+                "error": {"type": "string"}
+            }
+        },
+            examples=[
+                OpenApiExample(
+                    name="User already exists",
+                    value={"error": "User already exists"},
+                    response_only=True
+                ),
+                OpenApiExample(
+                    name="Invalid credentials",
+                    value={"error": "Invalid credentials"},
+                    response_only=True
+                )
+            ]
+        )}  
+        
+    
     )
     def post(self, request):
         if not request.data.get('email') or not request.data.get('userpassword'):
@@ -51,9 +71,6 @@ class PartnerRegistrationView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST   )
         
-        
-        password=request.data.pop('userpassword')
-        email=request.data.pop('email')
         request.data.pop('username')
         serializer = CustomPartnerProfileSerializerRegister(data=request.data)
         if serializer.is_valid():
@@ -73,6 +90,7 @@ class PartnerRegistrationView(APIView):
         
 
 class LogoutAPIView(APIView):
+    
     def get(self, request, format=None):
         refresh_token = request.headers.get('Authorization')
 

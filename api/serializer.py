@@ -160,3 +160,8 @@ class CustomPartnerProfileSerializerRegister(serializers.ModelSerializer):
     class Meta:
         model = PartnerProfile
         fields = ('uuid', 'user', 'venue_name', 'address', 'phone_number', 'ssid', 'code', 'password','code', 'created_at', 'updated_at')
+        
+class VenudataViewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PartnerProfile
+        fields = ('ssid', 'code', 'created_at', 'updated_at')

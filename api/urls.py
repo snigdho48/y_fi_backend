@@ -20,6 +20,9 @@ urlpatterns = [
     
   # Venue Data API
     path('venue/data/', VenueDataView.as_view(), name='venue_data'),
+    path('venue/wifi/add/', AddVenuWifiDataView.as_view(), name='add_venue_wifi'),
+    path('venue/wifi/update/', UpdateVenueDataView.as_view(), name='update_venue_wifi'),
+    path('venue/wifi/delete/', DeleteVenueDataView.as_view(), name='delete_venue_wifi'),
     
   # Data Collect API
     path('data/collect/', DataCollectView.as_view(), name='data_collect'),
