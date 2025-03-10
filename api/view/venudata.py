@@ -110,7 +110,7 @@ class AddVenuWifiDataView(APIView):
         request.data['address'] = address
         request.data['phone_number'] = phone_number
         request.data['user'] = user.id
-        request.data['code'] = genrate_Unique_code(venu_name=venu_name,wifi_routers_length=venu_routers)
+        request.data['code'] = genrate_Unique_code(venu_name=venu_name,wifi_routers_length=venu_routers+1)
         
         
         serializer = CustomPartnerProfileSerializerRegister(data=request.data)
@@ -307,6 +307,6 @@ class GetAllVenueDataView(APIView):
 
 def genrate_Unique_code(venu_name,wifi_routers_length):
     venu_name = venu_name.replace(' ','_')
-    code = venu_name[:3].upper() + str(wifi_routers_length)
+    code = venu_name.upper() + str(wifi_routers_length)
     return code
     

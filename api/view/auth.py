@@ -56,7 +56,7 @@ class PartnerRegistrationView(APIView):
             user = CustomUser.objects.get(email=request.data.get('email'))
             return Response({"error": "User already exists"}, status=status.HTTP_400_BAD_REQUEST)
         except CustomUser.DoesNotExist:
-
+        
             user = CustomUser.objects.create_user(
                     username=request.data.get('username', ''),
                     email=request.data.get('email'),
@@ -85,6 +85,7 @@ class PartnerRegistrationView(APIView):
             return Response(data, status=status.HTTP_200_OK)
         
         user.delete()
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
         
