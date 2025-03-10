@@ -117,7 +117,7 @@ class AddVenuWifiDataView(APIView):
         if serializer.is_valid():
             serializer.save()
             all_wifi_routers = PartnerProfile.objects.filter(user=user)
-            data = [router for router in all_wifi_routers if router.ssid is not None and router.password is not None and router.code is not None]
+            data= all_wifi_routers.exclude(ssid=None).exclude(password=None).exclude(code=None).exclude(ssid='').exclude(password='').exclude(code='')
             serializer_data = VenudataViewSerializer(data, many=True)
             return Response(serializer_data.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -179,7 +179,7 @@ class DeleteVenueDataView(APIView):
             return Response({"error": "Venue not found"}, status=status.HTTP_400_BAD_REQUEST)
         partner.delete()
         all_wifi_routers = PartnerProfile.objects.filter(user=user)
-        data = [router for router in all_wifi_routers if router.ssid is not None and router.password is not None and router.code is not None]
+        data= all_wifi_routers.exclude(ssid=None).exclude(password=None).exclude(code=None).exclude(ssid='').exclude(password='').exclude(code='')
         serializer_data = VenudataViewSerializer(data, many=True)
         return Response(serializer_data.data, status=status.HTTP_200_OK)
     
@@ -263,11 +263,46 @@ class UpdateVenueDataView(APIView):
         partner.password = password
         partner.save()
         all_wifi_routers = PartnerProfile.objects.filter(user=user)
-        data = [router for router in all_wifi_routers if router.ssid is not None and router.password is not None and router.code is not None]
+        data= all_wifi_routers.exclude(ssid=None).exclude(password=None).exclude(code=None).exclude(ssid='').exclude(password='').exclude(code='')
         serializer_data = VenudataViewSerializer(data, many=True)
         return Response(serializer_data.data, status=status.HTTP_200_OK)
     
-
+class GetAllVenueDataView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                response=VenudataViewSerializer(many=True),
+               
+            ),
+            400: OpenApiResponse(
+                response={
+                    "type": "object",
+                    "properties": {
+                        "detail": {"type": "string"}
+                    }
+                },
+                examples=[
+                    OpenApiExample(
+                        name="Invalid credentials",
+                        value={"detail": "Unauthorized"},
+                        response_only=True
+                    )
+                ]
+            )
+        }
+    )
+    def get(self, request):
+        user = request.user
+        group = user.groups.first()
+        if group.name != 'partner':
+                return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        all_wifi_routers = PartnerProfile.objects.filter(user=user)
+        data= all_wifi_routers.exclude(ssid=None).exclude(password=None).exclude(code=None).exclude(ssid='').exclude(password='').exclude(code='')
+        
+        serializer_data = VenudataViewSerializer(data, many=True)
+        return Response(serializer_data.data, status=status.HTTP_200_OK)
 
 
 def genrate_Unique_code(venu_name,wifi_routers_length):
