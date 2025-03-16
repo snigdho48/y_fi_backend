@@ -30,6 +30,7 @@ urlpatterns = [
     
   # Release App API
     path('release/app/', ReleaseAppViewSet.as_view(), name='release_app'),
+    path('partner/app/', PartnerAppViewSet.as_view(), name='partner_app'),
 
 ] + apidoc_urlpatterns
 

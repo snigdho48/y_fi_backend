@@ -47,3 +47,9 @@ class ReleaseAppAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
     
 admin.site.register(ReleaseApp, ReleaseAppAdmin)
+
+class PartnerAppAdmin(admin.ModelAdmin):
+    model = PartnerApp
+    list_display = ('id', 'app', 'count', 'created_at')
+    search_fields = ('id', 'count')
+    ordering = ('-created_at',)
