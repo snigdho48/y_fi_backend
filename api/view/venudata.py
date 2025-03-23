@@ -101,7 +101,7 @@ class AddVenuWifiDataView(APIView):
         partner = PartnerProfile.objects.filter(user=user).first()
         if not partner:
             return Response({"error": "Partner not found"}, status=status.HTTP_400_BAD_REQUEST)
-        venu_routers = PartnerProfile.objects.filter(user=user).count()
+        venu_routers = PartnerProfile.objects.filter(user=user)
         venu_name = partner.venue_name
         address = partner.address   
         phone_number = partner.phone_number
@@ -110,7 +110,7 @@ class AddVenuWifiDataView(APIView):
         request.data['address'] = address
         request.data['phone_number'] = phone_number
         request.data['user'] = user.id
-        request.data['code'] = genrate_Unique_code(venu_name=venu_name,wifi_routers_length=venu_routers+1)
+        request.data['code'] = genrate_Unique_code(venu_name=venu_name,wifi_routers_length=len(venu_routers)+1)
         
         
         serializer = CustomPartnerProfileSerializerRegister(data=request.data)
