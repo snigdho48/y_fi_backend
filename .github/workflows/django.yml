@@ -1,41 +1,37 @@
-# name: Deploy to Server
+name: Deploy to Server
 
-# on:
-#   push:
-#     branches:
-#       - master
+on:
+  push:
+    branches:
+      - master
 
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-#     steps:
-#     - name: Checkout code
-#       uses: actions/checkout@v3
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-#     - name: Deploy to server
-#       run: |
-#         echo "${{ secrets.PEM_FILE }}" > private_key.pem
-#         chmod 600 private_key.pem
-#         ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@${{ secrets.SERVER_URL }} << 'EOF'
-#           cd /home/ubuntu/projects/
-#           sudo rm -rf y_fi_backend
-#           git clone https://github.com/snigdho48/y_fi_backend.git y_fi_backend
-#           cd y_fi_backend
-#           python3 -m venv venv
-#           source venv/bin/activate
-#           pip install -r requirements.txt
-#           sudo chown -R www-data:www-data /home/ubuntu/projects/y_fi_backend/static
-#           sudo chown -R ubuntu:www-data /home/ubuntu/projects/y_fi_backend/media
-#           sudo chmod -R 755 /home/ubuntu/projects/y_fi_backend/static
-#           sudo chmod -R 755 /home/ubuntu/projects/y_fi_backend/media
-
-#           sudo chmod 755 /home/ubuntu/projects
-#           sudo chmod 755 /home/ubuntu
-#           sudo chmod 755 /home
-#           sudo systemctl daemon-reload
-#           sudo systemctl restart gunicorn
-#           sudo systemctl restart nginx
-#           echo "Deployment successful"
-#         EOF
-#         rm -f private_key.pem  # Cleanup after execution
+    - name: Deploy to server
+      run: |
+        echo "${{ secrets.PEM_FILE }}" > private_key.pem
+        chmod 600 private_key.pem
+        ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@${{ secrets.SERVER_URL }} << 'EOF'
+          cd /home/ubuntu/projects/y_fi_backend
+          git pull origin master
+          source /home/ubuntu/projects/y_fi_backend/venv/bin/activate
+          pip install -r requirements.txt
+          sudo chown -R www-data:www-data /home/ubuntu/projects/y_fi_backend/static
+          sudo chown -R ubuntu:www-data /home/ubuntu/projects/y_fi_backend/media
+          sudo chmod -R 755 /home/ubuntu/projects/y_fi_backend/static
+          sudo chmod -R 755 /home/ubuntu/projects/y_fi_backend/media
+          sudo chmod 755 /home/ubuntu/projects
+          sudo chmod 755 /home/ubuntu
+          sudo chmod 755 /home
+          sudo systemctl daemon-reload
+          sudo systemctl restart gunicorn
+          sudo systemctl restart nginx
+          echo "Deployment successful"
+        EOF
+        rm -f private_key.pem  # Cleanup after execution
