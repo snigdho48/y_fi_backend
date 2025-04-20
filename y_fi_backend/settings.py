@@ -178,3 +178,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 209715200  # 200 MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 209715200  # 200 MB
+
+# settings.py
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'mail.adcelerete.com'
+EMAIL_PORT = 995
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'contact@adcelerete.com'  # Use your email address here
+EMAIL_HOST_PASSWORD = 'Cboh?dW?F9K?'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

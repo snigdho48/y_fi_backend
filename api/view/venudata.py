@@ -1,4 +1,4 @@
-from drf_spectacular.utils import extend_schema, OpenApiResponse,OpenApiExample
+from drf_spectacular.utils import extend_schema, OpenApiResponse,OpenApiExample,OpenApiParameter
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework import status
@@ -6,6 +6,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from api.serializer import PartnerProfileSerializer,CustomPartnerProfileSerializerRegister,VenudataViewSerializer
 from api.models import PartnerProfile
+import qrcode
+import io,os
+from django.http import FileResponse
+from django.conf import settings
+from PIL import Image
+from django.core.mail import EmailMessage
+
+
+
 
 
 
@@ -119,6 +128,13 @@ class AddVenuWifiDataView(APIView):
             all_wifi_routers = PartnerProfile.objects.filter(user=user)
             data= all_wifi_routers.exclude(ssid=None).exclude(password=None).exclude(code=None).exclude(ssid='').exclude(password='').exclude(code='')
             serializer_data = VenudataViewSerializer(data, many=True)
+            qrcode = qrcode_generator(code=serializer.data['code'])
+            if qrcode:
+                send_qr_code_email(
+                    partner=partner,
+                    code=serializer.data['code'],
+                   
+                )
             return Response(serializer_data.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -310,3 +326,120 @@ def genrate_Unique_code(venu_name,wifi_routers_length):
     code = venu_name.upper() + str(wifi_routers_length)
     return code
     
+    
+class GetQrCodeApiView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="code", required=True, type=str, location=OpenApiParameter.QUERY)
+        ],
+        responses={
+            200: OpenApiResponse(description="QR Code Image"),
+            400: OpenApiResponse(
+                response={
+                    "type": "object",
+                    "properties": {
+                        "error": {"type": "string"}
+                    }
+                },
+                examples=[
+                    OpenApiExample(
+                        name="Code not found",
+                        value={"error": "Code is required."},
+                        response_only=True
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                response={
+                    "type": "object",
+                    "properties": {
+                        "error": {"type": "string"}
+                    }
+                },
+                examples=[
+                    OpenApiExample(
+                        name="Unauthorized",
+                        value={"error": "Unauthorized"},
+                        response_only=True
+                    )
+                ]
+            )
+        }
+    )
+    def get(self, request):
+        user = request.user
+        group = user.groups.first()
+        if group.name != 'partner':
+                return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        code = request.query_params.get('code')
+        if not code:
+            return Response({"error": "Code is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        partner = PartnerProfile.objects.filter(code=code,user=user)
+        if not partner.exists():
+            return Response({"error": "Venue not found"}, status=status.HTTP_400_BAD_REQUEST)
+        partner = partner.first()
+        qrlink = qrcode_generator(code)
+        return FileResponse(qrlink, content_type='image/jpeg', filename=f'{partner.venue_name}_${partner.code}_qr.jpg')
+
+    
+def qrcode_generator(code):
+    data = f"https://app.freeyfi.com/?code={code}"  # also fixed the incorrect `${code}`
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(data)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white").convert('RGB')
+
+    # ✅ Properly load logo from media path
+    logo_path = os.path.join(settings.MEDIA_ROOT, "logo.jpeg")
+    if os.path.exists(logo_path):
+        logo_img = Image.open(logo_path)
+        qr_width, qr_height = img.size
+
+        # Scale the logo size (20% of QR code)
+        logo_size = int(qr_width * 0.2)
+        logo_img = logo_img.resize((logo_size, logo_size), Image.LANCZOS)
+        pos = ((qr_width - logo_size) // 2, (qr_height - logo_size) // 2)
+        img.paste(logo_img, pos, mask=logo_img if logo_img.mode == 'RGBA' else None)
+
+    img_bytes = io.BytesIO()
+    img.save(img_bytes, format="JPEG", quality=100)
+    img_bytes.seek(0)
+    return img_bytes
+
+def send_qr_code_email(partner, code):
+    try:
+        # Generate the QR code image
+        qrcode_image = qrcode_generator(code)
+        print(code)  # For debugging
+
+        # Prepare the email
+        subject = "Venue QR Code"
+        message = "Your QR code is ready."
+        recipient_list = [partner.user.email]
+
+        # Create an EmailMessage instance
+        email = EmailMessage(
+            subject=subject,
+            body=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=recipient_list,
+        )
+
+        # Attach the QR code image as a file
+        email.attach(f"{code}_qr.jpg", qrcode_image.read(), "image/jpeg")
+
+        # Send the email
+        email.send()
+
+
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        # Handle the error (e.g., log it, notify admin, etc.)
