@@ -11,7 +11,8 @@ import io,os
 from django.http import FileResponse
 from django.conf import settings
 from PIL import Image
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 
 
@@ -414,32 +415,65 @@ def qrcode_generator(code):
     img_bytes.seek(0)
     return img_bytes
 
+
+
+
 def send_qr_code_email(partner, code):
     try:
+        print("Sending email...")
+
         # Generate the QR code image
         qrcode_image = qrcode_generator(code)
-        print(code)  # For debugging
 
-        # Prepare the email
-        subject = "Venue QR Code"
-        message = "Your QR code is ready."
-        recipient_list = [partner.user.email]
+        subject = "Your FreeYFi QR Code"
+        from_email = settings.EMAIL_HOST_USER
+        to_email = [partner.user.email]
 
-        # Create an EmailMessage instance
-        email = EmailMessage(
-            subject=subject,
-            body=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=recipient_list,
+        # Create HTML content (inline)
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; color: #333; }}
+                .container {{ padding: 20px; }}
+                .header {{ font-size: 20px; font-weight: bold; }}
+                .qr-section {{ margin-top: 20px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">Hello {partner.user.first_name},</div>
+                <p>Here is your QR code for <strong>{partner.venue_name}</strong>.</p>
+                <p><strong>WIFI Code:</strong> {code}</p>
+                <p>The QR code is attached to this email.</p>
+                <br>
+                <p>Thanks,<br>FreeYFi Team</p>
+            </div>
+        </body>
+        </html>
+        """
+
+        # Create the email
+        email = EmailMultiAlternatives(
+          subject,
+            '',
+            from_email,
+            to_email
         )
+        print(email.from_email)
+        print(email.to)
 
-        # Attach the QR code image as a file
+        # Attach HTML content
+        email.attach_alternative(html_content, "text/html")
+
+        # Attach the QR code image
         email.attach(f"{code}_qr.jpg", qrcode_image.read(), "image/jpeg")
+        print("About to send email")
 
         # Send the email
-        email.send()
-
+        email.send(fail_silently=True)
+        print("Email sent successfully.")
 
     except Exception as e:
         print(f"Error sending email: {e}")
-        # Handle the error (e.g., log it, notify admin, etc.)
