@@ -398,16 +398,16 @@ def qrcode_generator(code):
     img = qr.make_image(fill_color="black", back_color="white").convert('RGB')
 
     # ✅ Properly load logo from media path
-    logo_path = os.path.join(settings.MEDIA_ROOT, "logo.jpeg")
+    logo_path = os.path.join(settings.MEDIA_ROOT, "logo.png")
     if os.path.exists(logo_path):
-        logo_img = Image.open(logo_path)
+        logo_img = Image.open(logo_path).convert("RGBA")
         qr_width, qr_height = img.size
 
         # Scale the logo size (20% of QR code)
-        logo_size = int(qr_width * 0.2)
+        logo_size = int(qr_width * 0.15)
         logo_img = logo_img.resize((logo_size, logo_size), Image.LANCZOS)
         pos = ((qr_width - logo_size) // 2, (qr_height - logo_size) // 2)
-        img.paste(logo_img, pos, mask=logo_img if logo_img.mode == 'RGBA' else None)
+        img.paste(logo_img, pos, mask=logo_img)
 
     img_bytes = io.BytesIO()
     img.save(img_bytes, format="JPEG", quality=100)
