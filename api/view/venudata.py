@@ -8,11 +8,13 @@ from api.serializer import PartnerProfileSerializer,CustomPartnerProfileSerializ
 from api.models import PartnerProfile
 import qrcode
 import io,os
-from django.http import FileResponse
+from django.http import FileResponse, StreamingHttpResponse
 from django.conf import settings
 from PIL import Image
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from api.models import *
+import requests
 
 
 
@@ -477,3 +479,73 @@ def send_qr_code_email(partner, code):
 
     except Exception as e:
         print(f"Error sending email: {e}")
+{
+    "user": "",
+    "partner": "",
+    "ip": "",
+    "device_os": "",
+    "device_name": "",
+    "device_brand": "",
+    "device_id": ""
+}      
+class PassVenuInfoApiView(APIView):
+    authentication_classes=[]
+    permission_classes=[]
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                response=VenudataViewSerializer(many=True),
+               
+            ),
+            400: OpenApiResponse(
+                response={
+                    "type": "object",
+                    "properties": {
+                        "detail": {"type": "string"}
+                    }
+                },
+                examples=[
+                    OpenApiExample(
+                        name="Invalid credentials",
+                        value={"detail": "Unauthorized"},
+                        response_only=True
+                    )
+                ]
+            )
+        }
+    )
+    def get(self, request):
+        
+        url = "https://cms.freeyfi.com/api/v1/app_connection_data/"
+        connectedHistory = ConnectedHistory.objects.all()
+        total = connectedHistory.count()
+        def event_stream():
+            count = 0
+            for history in connectedHistory:
+                payload = {
+                    "user": history.user.username,
+                    "partner": history.partner.venue_name,
+                    "ip": history.ip,
+                    "device_os": history.device_os,
+                    "device_name": history.device_name,
+                    "device_brand": history.device_brand,
+                    "device_id": history.device_id
+                }
+                try:
+                    resp = requests.post(url, json=payload)
+                    status_code = resp.status_code
+                    resp_text = resp.text
+                    if status_code in [200, 201]:
+                        # Delete the history entry if sent successfully
+                        history.delete()
+                        delete_status = "Deleted"
+                    else:
+                        delete_status = "Not deleted"
+                except Exception as e:
+                    status_code = 'error'
+                    delete_status = "Not deleted (error)"
+                count += 1
+                yield f"Sent {count}/{total} => status: {status_code}, delete: {delete_status}\n"
+        return StreamingHttpResponse(event_stream(), content_type="text/plain")
+            
+            
