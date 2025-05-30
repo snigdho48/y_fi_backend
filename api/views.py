@@ -2,5 +2,6 @@ from .view.auth import MyTokenObtainPairView, LogoutAPIView, PartnerTokenObtainP
 from .view.venudata import VenueDataView, AddVenuWifiDataView,DeleteVenueDataView,UpdateVenueDataView,GetAllVenueDataView,GetQrCodeApiView,PassVenuInfoApiView
 from .view.datacollect import DataCollectView
 from .view.Releaseapp import ReleaseAppViewSet,PartnerAppViewSet
+from .view.partnerDashbaord import PartnerDashboardView
 
 # Create your views here.
