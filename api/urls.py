@@ -34,6 +34,11 @@ urlpatterns = [
     path('partner/app/', PartnerAppViewSet.as_view(), name='partner_app'),
     path('venue/passdata/', PassVenuInfoApiView.as_view()),
     path('partner/dashboard/', PartnerDashboardView.as_view(), name='partner_dashboard'),
+    
+  # Ad Load API
+    path('ad/load/', AdLoadView.as_view(), name='ad_load'),
+  # Partner Dashboard API
+    path('partner/dashboard/data/', GetPartnerDashboardData.as_view(), name='partner_dashboard_data'),
 
 ] + apidoc_urlpatterns
 

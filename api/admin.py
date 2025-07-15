@@ -54,3 +54,24 @@ class PartnerAppAdmin(admin.ModelAdmin):
     search_fields = ('id', 'count')
     ordering = ('-created_at',)
 admin.site.register(PartnerApp, PartnerAppAdmin)
+
+class AdsmodelAdmin(admin.ModelAdmin):
+    model = Adsmodel
+    list_display = ('id', 'adSize', 'adUrl', 'adLanding', 'created_at')
+    search_fields = ('id', 'adSize', 'adUrl', 'adLanding')
+    ordering = ('-created_at',)
+admin.site.register(Adsmodel, AdsmodelAdmin)
+
+class AdsViewHistoryAdmin(admin.ModelAdmin):
+    model = AdsViewHistory
+    list_display = ('id', 'ads','partner', 'count', 'created_at')
+    search_fields = ('id', 'ads__adSize', 'count')
+    ordering = ('-created_at',)
+admin.site.register(AdsViewHistory, AdsViewHistoryAdmin)
+
+class AdusersAdmin(admin.ModelAdmin):
+    model = Adusers
+    list_display = ('id', 'device_id', 'created_at')
+    search_fields = ('id', 'device_id')
+    ordering = ('-created_at',)
+admin.site.register(Adusers, AdusersAdmin)

@@ -11,7 +11,6 @@ class CustomUser(AbstractUser):
     id = models.AutoField(primary_key=True, editable=False)  # Unique primary key
     username = models.CharField(max_length=150, unique=False,null=True,blank=True)  # Not unique
     email = models.EmailField(blank=True, null=True,unique=True)  # Not unique
-
     USERNAME_FIELD = 'email'  # Authenticate using username
     REQUIRED_FIELDS = []  # Required fields for user creation
 
@@ -78,4 +77,51 @@ class PartnerApp(models.Model):
     
     def __str__(self):
         return self.created_at.strftime('%Y-%m-%d %H:%M:%S')
+ADSIZES = [
+    ('320x50', '320x50'),
+    ('300x250', '300x250'),
+    ('320x100', '320x100'),
+    ('1024x768', '1024x768'),
+    
+]
+
+LOCATIONS=[
+    ('login', 'login'),
+    ('qrcode', 'qrcode'),
+    ('connecting', 'connecting'),
+    ('connected', 'connected'),
+    ('reconnect', 'reconnect'),
+    ('registration', 'registration'),
+    ('dashboard', 'dashboard'),
+    ('list', 'list'),
+]
+class Adsmodel(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    adSize=models.CharField(max_length=255,choices=ADSIZES)
+    location=models.CharField(max_length=255,choices=LOCATIONS)
+    adUrl=models.URLField(max_length=255)
+    adLanding= models.URLField(max_length=255)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=get_current_time,editable=False)
+    
+    
+    def __str__(self):
+        return self.adSize
+    
+class AdsViewHistory(models.Model):
+    partner = models.ForeignKey(PartnerProfile, on_delete=models.CASCADE, related_name='ads_view_histories',null=True,blank=True)
+    ads = models.ForeignKey(Adsmodel, on_delete=models.CASCADE, related_name='ads_view_histories')
+    count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(default=get_current_time,editable=False)
+    users= models.ManyToManyField('Adusers',related_name='ads_view_histories')
+    
+    def __str__(self):
+        return self.ads.adSize
+    
+class Adusers(models.Model):
+    device_id = models.CharField(max_length=255)
+    created_at = models.DateTimeField(default=get_current_time,editable=False)
+    
+    def __str__(self):
+        return self.device_id
 

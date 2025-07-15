@@ -84,8 +84,10 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+
 SPECTACULAR_SETTINGS = {
-    'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the pysidecar instead
+    'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
     'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
     'REDOC_DIST': 'SIDECAR',
     'TITLE': 'Y FI API Documentation',
@@ -95,8 +97,7 @@ SPECTACULAR_SETTINGS = {
         {
             'type': 'http',
             'scheme': 'bearer',
-            "bearerFormat": "Bearer", 
-            
+            "bearerFormat": "Bearer",
         }
     ],
 

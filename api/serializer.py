@@ -165,3 +165,29 @@ class VenudataViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerProfile
         fields = ('ssid','password', 'code', 'created_at', 'updated_at')
+        
+class AdsmodelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Adsmodel
+        fields = ('adSize', 'adUrl', 'adLanding', 'created_at')
+        
+class AdsViewHistorySerializer(serializers.ModelSerializer):
+    user_count = serializers.SerializerMethodField(read_only=True)
+    unique_user = serializers.SerializerMethodField(read_only=True)
+    partner_username = serializers.SerializerMethodField(read_only=True)
+    partner = serializers.PrimaryKeyRelatedField(queryset=PartnerProfile.objects.all(), write_only=True)
+    
+    class Meta:
+        model = AdsViewHistory
+        fields = ('ads', 'count', 'partner', 'partner_username', 'created_at', 'user_count', 'unique_user')
+        
+    def get_user_count(self, obj):
+        return obj.users.count()
+    
+    def get_unique_user(self, obj):
+        return obj.users.values_list('device_id',flat=True).distinct().count()
+        
+    def get_partner_username(self, obj):
+        if obj.partner:
+            return obj.partner.user.username
+        return None
