@@ -35,12 +35,14 @@ class AdLoadView(APIView):
         if adsize and location:
             ad_qs = Adsmodel.objects.filter(adSize=adsize, location=location, is_active=True)
             if ad_qs.exists():
-                if partner:
-                    partner_obj = PartnerProfile.objects.get(id=partner)
+
                 # pick a random ad
                 ad = ad_qs.order_by('?').first()
                 ad_serializer = AdsmodelSerializer(ad)
-                ad_view_history, created = AdsViewHistory.objects.get_or_create(ads=ad,partner=partner_obj)
+                ad_view_history, created = AdsViewHistory.objects.get_or_create(ads=ad)
+                if partner:
+                    partner_obj = PartnerProfile.objects.get(id=partner)
+                    ad_view_history.partner = partner_obj
                 ad_view_history.count += 1
                 if users:
                     user_obj = Adusers.objects.create(device_id=users)
