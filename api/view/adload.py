@@ -48,8 +48,9 @@ class AdLoadView(APIView):
                     ad_view_history, created = AdsViewHistory.objects.get_or_create(ads=ad, partner__isnull=True)
                 ad_view_history.count += 1
                 if users:
-                    user_obj = Adusers.objects.get_or_create(device_id=users)
-                    ad_view_history.users.add(user_obj)
+                    user_obj, _ = Adusers.objects.get_or_create(device_id=users)
+                    if user_obj not in ad_view_history.users.all():
+                        ad_view_history.users.add(user_obj)
                 ad_view_history.save()
                 return Response(ad_serializer.data, status=status.HTTP_200_OK)
             else:
