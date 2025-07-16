@@ -87,7 +87,7 @@ ADSIZES = [
 
 LOCATIONS=[
     ('login', 'login'),
-    ('qrcode', 'qrcode'),
+    ('home', 'home'),
     ('connecting', 'connecting'),
     ('connected', 'connected'),
     ('reconnect', 'reconnect'),
