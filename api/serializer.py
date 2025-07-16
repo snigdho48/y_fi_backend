@@ -69,7 +69,8 @@ class MyTokenObtainPartnerPairSerializer(TokenObtainPairSerializer):
         token['username'] = user.username
         token['email'] = user.email
         token['user_groups'] = [group.name for group in user.groups.all()]
-        token['partner_id'] = user.id
+        partner_profile = PartnerProfile.objects.filter(user=user).order_by('?').first()
+        token['partner_id'] = partner_profile.id if partner_profile else None
         return token
 
     def validate(self, attrs,):
@@ -96,7 +97,8 @@ class MyTokenObtainPartnerPairSerializer(TokenObtainPairSerializer):
         data['token'] = str(data['access'])
         data.pop('access')
         # Add partner_profile_id if exists
-        data['partner_id'] = user.id if user.groups.filter(name='partner').exists() else None
+        partner_profile = PartnerProfile.objects.filter(user=user).order_by('?').first()
+        data['partner_id'] = partner_profile.id if partner_profile else None
         return data
 
 

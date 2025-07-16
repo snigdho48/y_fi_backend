@@ -41,8 +41,11 @@ class AdLoadView(APIView):
                 ad_serializer = AdsmodelSerializer(ad)
                 ad_view_history = None
                 if partner:
-                    ad_view_history, created = AdsViewHistory.objects.get_or_create(ads=ad,partner=partner)
+                    partner = int(partner)
                     partner_obj = PartnerProfile.objects.get(id=partner)
+                    print(partner_obj)
+                    
+                    ad_view_history, created = AdsViewHistory.objects.get_or_create(ads=ad,partner=partner_obj)
                     ad_view_history.partner = partner_obj
                 else:
                     ad_view_history, created = AdsViewHistory.objects.get_or_create(ads=ad, partner__isnull=True)
