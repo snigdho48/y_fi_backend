@@ -54,7 +54,7 @@ class PartnerRegistrationView(APIView):
             return Response({"error": " Email and Password are required"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             user = CustomUser.objects.get(email=request.data.get('email'))
-            return Response({"error": "User already exists"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "User already exists. Please login or use a different email"}, status=status.HTTP_400_BAD_REQUEST)
         except CustomUser.DoesNotExist:
         
             user = CustomUser.objects.create_user(
