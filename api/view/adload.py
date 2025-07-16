@@ -7,7 +7,8 @@ from rest_framework.response import Response
 from api.serializer import *
 from rest_framework.permissions import AllowAny
 from api.models import Adsmodel, AdsViewHistory  # Ensure models are imported
-
+from django.db.models import Sum
+from api.serializer import PartnerDashboardDataSerializer
 
 class AdLoadView(APIView):
     permission_classes = [AllowAny] 
@@ -43,7 +44,6 @@ class AdLoadView(APIView):
                 if partner:
                     partner = int(partner)
                     partner_obj = PartnerProfile.objects.get(id=partner)
-                    print(partner_obj)
                     
                     ad_view_history, created = AdsViewHistory.objects.get_or_create(ads=ad,partner=partner_obj)
                     ad_view_history.partner = partner_obj
@@ -65,10 +65,16 @@ class AdLoadView(APIView):
 class GetPartnerDashboardData(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(response=PartnerDashboardDataSerializer),
+            403: OpenApiResponse(response={'error': 'You are not authorized to access this resource'}),
+        }
+    )
     def get(self, request):
         if not request.user.groups.filter(name='partner').exists():
             return Response({'error': 'You are not authorized to access this resource'}, status=status.HTTP_403_FORBIDDEN)
         # Get all AdsViewHistory for all partner profiles of this user
         ads_view_histories = AdsViewHistory.objects.filter(partner__user__id=request.user.id)
-        serialize_value = AdsViewHistorySerializer(ads_view_histories, many=True)
-        return Response(serialize_value.data, status=status.HTTP_200_OK)
+        serializer = PartnerDashboardDataSerializer(ads_view_histories)
+        return Response(serializer.data, status=status.HTTP_200_OK)

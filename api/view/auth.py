@@ -85,7 +85,6 @@ class PartnerRegistrationView(APIView):
             return Response(data, status=status.HTTP_200_OK)
         
         user.delete()
-        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
         

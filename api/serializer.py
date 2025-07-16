@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from api.models import *
 from django.contrib.auth.models import Group
 from django.contrib.auth import authenticate
-
+from django.db.models import Sum
 User = settings.AUTH_USER_MODEL
 
 
@@ -34,7 +34,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         
         # Check if user exists by email
         user = CustomUser.objects.filter(email=email).first()
-        print(user)
 
         if not user:
             # Create the user with a hashed password
@@ -194,3 +193,49 @@ class AdsViewHistorySerializer(serializers.ModelSerializer):
         if obj.partner:
             return obj.partner.user.username
         return None
+
+
+class PartnerDashboardDataSerializer(serializers.Serializer):
+    total_ads_campaign = serializers.SerializerMethodField(read_only=True)
+    total_users_viewed = serializers.SerializerMethodField(read_only=True)
+    total_ads_viewed = serializers.SerializerMethodField(read_only=True)
+    start_date = serializers.SerializerMethodField(read_only=True)
+    end_date = serializers.SerializerMethodField(read_only=True)
+    total_income = serializers.SerializerMethodField(read_only=True)
+
+    def get_total_ads_campaign(self, obj):
+        print(obj.count())
+        return obj.count()
+
+    def get_total_users_viewed(self, obj):
+        # Aggregate unique users across all AdsViewHistory in the queryset
+        return obj.values('users__device_id').distinct().count()
+
+    def get_total_ads_viewed(self, obj):
+        return obj.aggregate(total=Sum('count'))['total']
+
+    def get_start_date(self, obj):
+        first = obj.order_by('created_at').first()
+        if first and first.created_at:
+            return first.created_at.strftime('%d.%b.%Y')
+        return None
+
+    def get_end_date(self, obj):
+        last = obj.order_by('-created_at').first()
+        if last and last.created_at:
+            return last.created_at.strftime('%d.%b.%Y')
+        return None
+
+    def get_total_income(self, obj):
+        total = obj.aggregate(total=Sum('count'))['total']
+        return round((total or 0) * 0.34, 2)
+
+    class Meta:
+        fields = (
+            'total_ads_campaign',
+            'total_users_viewed',
+            'total_ads_viewed',
+            'start_date',
+            'end_date',
+            'total_income',
+        ) 
