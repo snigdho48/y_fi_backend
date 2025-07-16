@@ -69,6 +69,7 @@ class MyTokenObtainPartnerPairSerializer(TokenObtainPairSerializer):
         token['username'] = user.username
         token['email'] = user.email
         token['user_groups'] = [group.name for group in user.groups.all()]
+        token['partner_id'] = user.id
         return token
 
     def validate(self, attrs,):
@@ -83,7 +84,6 @@ class MyTokenObtainPartnerPairSerializer(TokenObtainPairSerializer):
         # Check if user exists by email            
             
         user = authenticate(email=email, password=password)
-        print(email, password)
 
         if not user:
             raise serializers.ValidationError({"error": "Invalid credentials"})
