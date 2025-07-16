@@ -39,7 +39,7 @@ class AdLoadView(APIView):
                 # pick a random ad
                 ad = ad_qs.order_by('?').first()
                 ad_serializer = AdsmodelSerializer(ad)
-                
+                ad_view_history = None
                 if partner:
                     ad_view_history, created = AdsViewHistory.objects.get_or_create(ads=ad,partner=partner)
                     partner_obj = PartnerProfile.objects.get(id=partner)
