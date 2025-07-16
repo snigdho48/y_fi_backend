@@ -82,7 +82,7 @@ class MyTokenObtainPartnerPairSerializer(TokenObtainPairSerializer):
             raise serializers.ValidationError({"error": "Password is required"})
         
         # Check if user exists by email            
-            
+        
         user = authenticate(email=email, password=password)
 
         if not user:
@@ -95,7 +95,8 @@ class MyTokenObtainPartnerPairSerializer(TokenObtainPairSerializer):
         data['user_group'] = user.groups.all().first().name if user.groups.exists() else None
         data['token'] = str(data['access'])
         data.pop('access')
-
+        # Add partner_profile_id if exists
+        data['partner_id'] = user.id if user.groups.filter(name='partner').exists() else None
         return data
 
 
