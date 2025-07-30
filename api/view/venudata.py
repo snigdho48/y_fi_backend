@@ -6,8 +6,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from api.serializer import PartnerProfileSerializer,CustomPartnerProfileSerializerRegister,VenudataViewSerializer
 from api.models import PartnerProfile
-import qrcode
-import io,os
 from django.http import FileResponse, StreamingHttpResponse
 from django.conf import settings
 from PIL import Image

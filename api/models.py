@@ -124,4 +124,12 @@ class Adusers(models.Model):
     
     def __str__(self):
         return self.device_id
-
+    
+class VenuDetails(models.Model):
+    partner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='venu_data')
+    latitude = models.DecimalField(max_digits=10, decimal_places=8)
+    longitude = models.DecimalField(max_digits=11, decimal_places=8)
+    created_at = models.DateTimeField(default=get_current_time,editable=False)
+    
+    def __str__(self):
+        return self.ssid

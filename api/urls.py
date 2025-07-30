@@ -1,4 +1,6 @@
 from django.urls import path
+
+from api.view.venueinfo import GetPartnersUser,VenuDetailsView
 from .views import *
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -39,6 +41,10 @@ urlpatterns = [
     path('ad/load/', AdLoadView.as_view(), name='ad_load'),
   # Partner Dashboard API
     path('partner/dashboard/data/', GetPartnerDashboardData.as_view(), name='partner_dashboard_data'),
+    
+  # Venue Details API
+    path('venue/details/', VenuDetailsView.as_view(), name='venue_details'),
+    path('partner/list/', GetPartnersUser.as_view(), name='get_partners_user'), 
 
 ] + apidoc_urlpatterns
 

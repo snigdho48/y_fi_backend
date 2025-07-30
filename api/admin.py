@@ -75,3 +75,11 @@ class AdusersAdmin(admin.ModelAdmin):
     search_fields = ('id', 'device_id')
     ordering = ('-created_at',)
 admin.site.register(Adusers, AdusersAdmin)
+
+
+class VenuDetailsAdmin(admin.ModelAdmin):
+    model = VenuDetails
+    list_display = ('id', 'partner', 'latitude', 'longitude', 'created_at')
+    search_fields = ('id', 'partner__username', 'latitude', 'longitude')
+    ordering = ('-created_at',)
+admin.site.register(VenuDetails, VenuDetailsAdmin)

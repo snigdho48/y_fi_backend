@@ -223,6 +223,7 @@ class PartnerDashboardDataSerializer(serializers.Serializer):
     def get_end_date(self, obj):
         last = obj.order_by('-created_at').first()
         if last and last.created_at:
+            print(last.created_at)
             return last.created_at.strftime('%d.%b.%Y')
         return None
 
@@ -239,3 +240,18 @@ class PartnerDashboardDataSerializer(serializers.Serializer):
             'end_date',
             'total_income',
         ) 
+        
+class VenuDetailsSerializer(serializers.ModelSerializer):
+    partner_username = serializers.SerializerMethodField(read_only=True)
+    partner = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), write_only=True)
+    class Meta:
+        model = VenuDetails
+        fields = ('partner_username','partner','latitude', 'longitude', 'created_at')
+        
+    def get_partner_username(self, obj):
+        return obj.partner.username
+        
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'username', 'email')
