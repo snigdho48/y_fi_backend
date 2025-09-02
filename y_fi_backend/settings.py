@@ -30,7 +30,7 @@ ALLOWED_HOSTS = ['ec2-3-108-205-134.ap-south-1.compute.amazonaws.com', '3.108.20
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_TRUSTED_ORIGINS = ['http://192.168.107.242','*']
+CSRF_TRUSTED_ORIGINS = ['http://192.168.107.242','*','https://app.freeyfi.com/']
 
 # Application definition
 
