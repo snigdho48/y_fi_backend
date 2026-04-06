@@ -132,4 +132,4 @@ class VenuDetails(models.Model):
     created_at = models.DateTimeField(default=get_current_time,editable=False)
     
     def __str__(self):
-        return self.ssid
+        return self.partner.username
