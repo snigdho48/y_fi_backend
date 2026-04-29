@@ -6,6 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from api.serializer import CustomConnectedHistorySerializer
 import requests
+from django.db import transaction
+
 from api.models import PartnerProfile,ConnectedHistory
 
 class DataCollectView(APIView):
@@ -23,8 +25,8 @@ class DataCollectView(APIView):
         url = 'https://cms.freeyfi.com/api/v1/app_connection_data/'
         
         if serializer.is_valid():
-            serializer.save()
-            history = ConnectedHistory.objects.get(uuid=serializer.data['uuid'])
+            with transaction.atomic():
+                history = serializer.save()
             payload = {
                     "user": history.user.username,
                     "partner": history.partner.venue_name,
@@ -39,7 +41,8 @@ class DataCollectView(APIView):
                     resp =requests.post(url, json=payload)
                     status_code = resp.status_code
                     if status_code in [200, 201]:
-                        history.delete()
+                        with transaction.atomic():
+                            history.delete()
 
             except Exception as e:
                     pass

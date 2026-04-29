@@ -5,8 +5,7 @@ _.py[cod]
 _$py.class
 *.sql
 \migrations
-# db.sqlite3
-# *.sqlite3
+#  
 /staticfiles/
 /static/
 /media/

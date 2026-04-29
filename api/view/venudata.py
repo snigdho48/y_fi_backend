@@ -8,12 +8,17 @@ from api.serializer import PartnerProfileSerializer,CustomPartnerProfileSerializ
 from api.models import PartnerProfile
 from django.http import FileResponse, StreamingHttpResponse
 from django.conf import settings
-from PIL import Image
+from django.db import transaction
+from PIL import Image, ImageDraw, ImageChops
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from api.models import *
 import requests
 import qrcode,os,io
+import threading
+from qrcode.image.styledpil import StyledPilImage
+from qrcode.image.styles.colormasks import SolidFillColorMask
+from qrcode.image.styles.moduledrawers.pil import CircleModuleDrawer, RoundedModuleDrawer
 
 
 
@@ -109,36 +114,61 @@ class AddVenuWifiDataView(APIView):
         
         user = request.user
         group = user.groups.first()
-        if group.name != 'partner':
+        if not group or group.name != 'partner':
                 return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         partner = PartnerProfile.objects.filter(user=user).first()
         if not partner:
             return Response({"error": "Partner not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+        ssid = (request.data.get('ssid') or '').strip()
+        password = (request.data.get('password') or '').strip()
+        if not ssid or not password:
+            return Response(
+                {"error": "SSID and password are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        wifi_rows = (
+            PartnerProfile.objects.filter(user=user)
+            .exclude(ssid__isnull=True)
+            .exclude(ssid='')
+        )
+        if wifi_rows.filter(ssid__iexact=ssid).exists():
+            return Response(
+                {
+                    "error": "You already have a venue with this SSID. "
+                    "Each network name (SSID) must be unique for your account."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         venu_routers = PartnerProfile.objects.filter(user=user)
         venu_name = partner.venue_name
         address = partner.address   
         phone_number = partner.phone_number
-        
-        request.data['venue_name'] = venu_name
-        request.data['address'] = address
-        request.data['phone_number'] = phone_number
-        request.data['user'] = user.id
-        request.data['code'] = genrate_Unique_code(venu_name=venu_name,wifi_routers_length=len(venu_routers)+1)
-        
-        
-        serializer = CustomPartnerProfileSerializerRegister(data=request.data)
+
+        payload = request.data.copy()
+        payload['venue_name'] = venu_name
+        payload['address'] = address
+        payload['phone_number'] = phone_number
+        payload['user'] = user.id
+        payload['ssid'] = ssid
+        payload['password'] = password
+        payload['code'] = genrate_Unique_code(
+            venu_name=venu_name, wifi_routers_length=len(venu_routers) + 1
+        )
+
+        serializer = CustomPartnerProfileSerializerRegister(data=payload)
         if serializer.is_valid():
-            serializer.save()
-            all_wifi_routers = PartnerProfile.objects.filter(user=user)
-            data= all_wifi_routers.exclude(ssid=None).exclude(password=None).exclude(code=None).exclude(ssid='').exclude(password='').exclude(code='')
-            serializer_data = VenudataViewSerializer(data, many=True)
-            qrcode = qrcode_generator(code=serializer.data['code'])
-            if qrcode:
-                send_qr_code_email(
-                    partner=partner,
-                    code=serializer.data['code'],
-                   
-                )
+            with transaction.atomic():
+                serializer.save()
+                all_wifi_routers = PartnerProfile.objects.filter(user=user)
+                data = all_wifi_routers.exclude(ssid=None).exclude(password=None).exclude(code=None).exclude(ssid='').exclude(password='').exclude(code='')
+                serializer_data = VenudataViewSerializer(data, many=True)
+            _send_qr_code_email_async(
+                partner=partner,
+                code=serializer.data['code'],
+            )
             return Response(serializer_data.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -189,7 +219,7 @@ class DeleteVenueDataView(APIView):
     def post(self, request):
         user = request.user
         group = user.groups.first()
-        if group.name != 'partner':
+        if not group or group.name != 'partner':
                 return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         code = request.data.get('code')
         if not code:
@@ -197,10 +227,11 @@ class DeleteVenueDataView(APIView):
         partner = PartnerProfile.objects.filter(code=code).first()
         if not partner:
             return Response({"error": "Venue not found"}, status=status.HTTP_400_BAD_REQUEST)
-        partner.delete()
-        all_wifi_routers = PartnerProfile.objects.filter(user=user)
-        data= all_wifi_routers.exclude(ssid=None).exclude(password=None).exclude(code=None).exclude(ssid='').exclude(password='').exclude(code='')
-        serializer_data = VenudataViewSerializer(data, many=True)
+        with transaction.atomic():
+            partner.delete()
+            all_wifi_routers = PartnerProfile.objects.filter(user=user)
+            data = all_wifi_routers.exclude(ssid=None).exclude(password=None).exclude(code=None).exclude(ssid='').exclude(password='').exclude(code='')
+            serializer_data = VenudataViewSerializer(data, many=True)
         return Response(serializer_data.data, status=status.HTTP_200_OK)
     
 class UpdateVenueDataView(APIView):
@@ -265,26 +296,43 @@ class UpdateVenueDataView(APIView):
     def post(self, request):
         user = request.user
         group = user.groups.first()
-        if group.name != 'partner':
+        if not group or group.name != 'partner':
                 return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         code = request.data.get('code')
         if not code:
             return Response({"error": "Code is required"}, status=status.HTTP_400_BAD_REQUEST)
-        ssid = request.data.get('ssid')
-        if not ssid:
-            return Response({"error": "SSID is required"}, status=status.HTTP_400_BAD_REQUEST)
-        password = request.data.get('password')
-        if not password:
-            return Response({"error": "Password is required"}, status=status.HTTP_400_BAD_REQUEST)
-        partner = PartnerProfile.objects.filter(code=code).first()
+        ssid = (request.data.get('ssid') or '').strip()
+        password = (request.data.get('password') or '').strip()
+        if not ssid or not password:
+            return Response(
+                {"error": "SSID and password are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        partner = PartnerProfile.objects.filter(code=code, user=user).first()
         if not partner:
             return Response({"error": "Venue not found"}, status=status.HTTP_400_BAD_REQUEST)
-        partner.ssid = ssid
-        partner.password = password
-        partner.save()
-        all_wifi_routers = PartnerProfile.objects.filter(user=user)
-        data= all_wifi_routers.exclude(ssid=None).exclude(password=None).exclude(code=None).exclude(ssid='').exclude(password='').exclude(code='')
-        serializer_data = VenudataViewSerializer(data, many=True)
+        duplicate_ssid = (
+            PartnerProfile.objects.filter(user=user, ssid__iexact=ssid)
+            .exclude(pk=partner.pk)
+            .exclude(ssid__isnull=True)
+            .exclude(ssid='')
+            .exists()
+        )
+        if duplicate_ssid:
+            return Response(
+                {
+                    "error": "Another venue already uses this SSID. "
+                    "Each network name (SSID) must be unique for your account."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        with transaction.atomic():
+            partner.ssid = ssid
+            partner.password = password
+            partner.save()
+            all_wifi_routers = PartnerProfile.objects.filter(user=user)
+            data = all_wifi_routers.exclude(ssid=None).exclude(password=None).exclude(code=None).exclude(ssid='').exclude(password='').exclude(code='')
+            serializer_data = VenudataViewSerializer(data, many=True)
         return Response(serializer_data.data, status=status.HTTP_200_OK)
     
 class GetAllVenueDataView(APIView):
@@ -316,7 +364,7 @@ class GetAllVenueDataView(APIView):
     def get(self, request):
         user = request.user
         group = user.groups.first()
-        if group.name != 'partner':
+        if not group or group.name != 'partner':
                 return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         all_wifi_routers = PartnerProfile.objects.filter(user=user)
         data= all_wifi_routers.exclude(ssid=None).exclude(password=None).exclude(code=None).exclude(ssid='').exclude(password='').exclude(code='')
@@ -375,7 +423,7 @@ class GetQrCodeApiView(APIView):
     def get(self, request):
         user = request.user
         group = user.groups.first()
-        if group.name != 'partner':
+        if not group or group.name != 'partner':
                 return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         code = request.query_params.get('code')
         if not code:
@@ -389,32 +437,99 @@ class GetQrCodeApiView(APIView):
         return FileResponse(qrlink, content_type='image/jpeg', filename=f'{partner.venue_name}_${partner.code}_qr.jpg')
 
     
+# Brand QR styling (RGB tuples — StyledPilImage requires SolidFillColorMask, not fill_color/back_color).
+_QR_BG_RGB = (169, 199, 75)  # #A9C74B
+_QR_FG_RGB = (55, 48, 97)  # #373061
+
+
+def _apply_rounded_corners(img: Image.Image, radius: int, corner_fill_rgb: tuple[int, int, int]) -> Image.Image:
+    """Clip `img` to a rounded rectangle; outside corners show `corner_fill_rgb`."""
+    w, h = img.size
+    if radius <= 0:
+        return img
+    mask = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, w, h), radius=radius, fill=255)
+    if img.mode != "RGBA":
+        img = img.convert("RGBA")
+    out = Image.new("RGBA", (w, h), (*corner_fill_rgb, 255))
+    out.paste(img, (0, 0), mask)
+    return out
+
+
+def _clip_rgba_to_rounded_rect(img: Image.Image, radius: int) -> Image.Image:
+    """Apply a rounded-rectangle alpha mask so bitmap edges match the card style."""
+    if img.mode != "RGBA":
+        img = img.convert("RGBA")
+    w, h = img.size
+    if w < 2 or h < 2:
+        return img
+    r = max(1, min(radius, min(w, h) // 2))
+    mask = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, w - 1, h - 1), radius=r, fill=255)
+    alpha = img.split()[3]
+    img.putalpha(ImageChops.multiply(alpha, mask))
+    return img
+
+
 def qrcode_generator(code):
     data = f"https://app.freeyfi.com/?code={code}"  # also fixed the incorrect `${code}`
     qr = qrcode.QRCode(
         version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
+        # Keep stronger correction so center logo does not break scan reliability.
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        box_size=16,
         border=4,
     )
     qr.add_data(data)
     qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white").convert('RGB')
 
-    # ✅ Properly load logo from media path
+    # Data modules: circles. Finder patterns (big 3): rounded merged tiles like reference art.
+    color_mask = SolidFillColorMask(
+        back_color=_QR_BG_RGB,
+        front_color=_QR_FG_RGB,
+    )
+    img = qr.make_image(
+        image_factory=StyledPilImage,
+        module_drawer=CircleModuleDrawer(),
+        # radius_ratio=1 => isolated cells draw as circles; connected eye blocks form smooth rounded rings.
+        eye_drawer=RoundedModuleDrawer(radius_ratio=1),
+        color_mask=color_mask,
+    ).convert("RGBA")
+
+    qr_width, qr_height = img.size
+    bg_rgb = _QR_BG_RGB
+
     logo_path = os.path.join(settings.MEDIA_ROOT, "logo.png")
     if os.path.exists(logo_path):
         logo_img = Image.open(logo_path).convert("RGBA")
-        qr_width, qr_height = img.size
-
-        # Scale the logo size (20% of QR code)
-        logo_size = int(qr_width * 0.15)
+        logo_size = int(qr_width * 0.20)
         logo_img = logo_img.resize((logo_size, logo_size), Image.LANCZOS)
-        pos = ((qr_width - logo_size) // 2, (qr_height - logo_size) // 2)
-        img.paste(logo_img, pos, mask=logo_img)
+        # Rounded logo graphic (not just square bitmap on green pad).
+        logo_corner_r = max(6, logo_size // 5)
+        logo_img = _clip_rgba_to_rounded_rect(logo_img, logo_corner_r)
+
+        pad = max(2, logo_size // 12)
+        patch_w = logo_size + pad * 2
+        patch_h = logo_size + pad * 2
+        patch = Image.new("RGBA", (patch_w, patch_h), (0, 0, 0, 0))
+        # Stronger squircle on center badge (reference-style corner radius).
+        patch_radius = max(8, int(min(patch_w, patch_h) * 0.22))
+        ImageDraw.Draw(patch).rounded_rectangle(
+            (0, 0, patch_w - 1, patch_h - 1),
+            radius=patch_radius,
+            fill=(*bg_rgb, 255),
+        )
+        patch.paste(logo_img, (pad, pad), mask=logo_img)
+        px = (qr_width - patch_w) // 2
+        py = (qr_height - patch_h) // 2
+        img.paste(patch, (px, py), mask=patch)
+
+    # Outer card: strong squircle so full QR reads rounded everywhere (app + downloads).
+    corner_radius = max(40, min(qr_width, qr_height) // 5)
+    img = _apply_rounded_corners(img, corner_radius, bg_rgb)
 
     img_bytes = io.BytesIO()
-    img.save(img_bytes, format="JPEG", quality=100)
+    img.convert("RGB").save(img_bytes, format="JPEG", quality=92, optimize=True)
     img_bytes.seek(0)
     return img_bytes
 
@@ -480,6 +595,15 @@ def send_qr_code_email(partner, code):
 
     except Exception as e:
         print(f"Error sending email: {e}")
+
+
+def _send_qr_code_email_async(partner, code):
+    # Avoid blocking the API response on SMTP/network latency.
+    threading.Thread(
+        target=send_qr_code_email,
+        kwargs={"partner": partner, "code": code},
+        daemon=True,
+    ).start()
 {
     "user": "",
     "partner": "",
