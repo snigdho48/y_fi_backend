@@ -21,6 +21,21 @@ from qrcode.image.styles.colormasks import SolidFillColorMask
 from qrcode.image.styles.moduledrawers.pil import CircleModuleDrawer, RoundedModuleDrawer
 
 
+def _parse_session_duration_minutes(raw) -> int:
+    """Integer minutes: 1–10080 (7 days). Default 30 if missing/invalid."""
+    if raw is None or raw == '':
+        return 30
+    try:
+        n = int(raw)
+    except (TypeError, ValueError):
+        return 30
+    if n < 1:
+        return 1
+    if n > 10080:
+        return 10080
+    return n
+
+
 
 
 
@@ -122,6 +137,7 @@ class AddVenuWifiDataView(APIView):
 
         ssid = (request.data.get('ssid') or '').strip()
         password = (request.data.get('password') or '').strip()
+        session_min = _parse_session_duration_minutes(request.data.get('session_duration_minutes'))
         if not ssid or not password:
             return Response(
                 {"error": "SSID and password are required."},
@@ -154,6 +170,7 @@ class AddVenuWifiDataView(APIView):
         payload['user'] = user.id
         payload['ssid'] = ssid
         payload['password'] = password
+        payload['session_duration_minutes'] = session_min
         payload['code'] = genrate_Unique_code(
             venu_name=venu_name, wifi_routers_length=len(venu_routers) + 1
         )
@@ -326,9 +343,11 @@ class UpdateVenueDataView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        session_min = _parse_session_duration_minutes(request.data.get('session_duration_minutes'))
         with transaction.atomic():
             partner.ssid = ssid
             partner.password = password
+            partner.session_duration_minutes = session_min
             partner.save()
             all_wifi_routers = PartnerProfile.objects.filter(user=user)
             data = all_wifi_routers.exclude(ssid=None).exclude(password=None).exclude(code=None).exclude(ssid='').exclude(password='').exclude(code='')

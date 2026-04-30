@@ -41,6 +41,8 @@ class PartnerProfile(models.Model):
     ssid = models.CharField(max_length=255,null=True,blank=True)
     code = models.CharField(max_length=255,null=True,blank=True)
     password = models.CharField(max_length=255,null=True,blank=True)
+    # How long an end-user session may stay on this Wi‑Fi (minutes); partner-configurable.
+    session_duration_minutes = models.PositiveIntegerField(default=30)
     created_at = models.DateTimeField(default=get_current_time, editable=False)
     updated_at = models.DateTimeField(default=get_current_time, editable=False)
     

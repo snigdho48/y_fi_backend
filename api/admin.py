@@ -26,7 +26,7 @@ admin.site.register(UserProfile, UserProfileAdmin)
 
 class PartnerProfileAdmin(admin.ModelAdmin):
     model = PartnerProfile
-    list_display = ('id', 'user', 'venue_name','code', 'ssid', 'password', 'address', 'phone_number', 'created_at', 'updated_at')
+    list_display = ('id', 'user', 'venue_name','code', 'ssid', 'session_duration_minutes', 'password', 'address', 'phone_number', 'created_at', 'updated_at')
     search_fields = ('user__username', 'venue_name','code', 'address', 'ssid')
     ordering = ('-created_at',)
     

@@ -124,7 +124,7 @@ class PartnerProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerProfile
-        fields = ("id", 'uuid', 'user', 'user_id', 'username', 'userpassword', 'email', 'venue_name', 'code', 'address', 'phone_number', 'ssid', 'password', 'created_at', 'updated_at')
+        fields = ("id", 'uuid', 'user', 'user_id', 'username', 'userpassword', 'email', 'venue_name', 'code', 'address', 'phone_number', 'ssid', 'password', 'session_duration_minutes', 'created_at', 'updated_at')
 
 class CustomPartnerProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer()
@@ -161,12 +161,12 @@ class CustomPartnerProfileSerializerRegister(serializers.ModelSerializer):
     user=serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), write_only=True)
     class Meta:
         model = PartnerProfile
-        fields = ('uuid', 'user', 'venue_name', 'address', 'phone_number', 'ssid', 'code', 'password','code', 'created_at', 'updated_at')
+        fields = ('uuid', 'user', 'venue_name', 'address', 'phone_number', 'ssid', 'code', 'password', 'session_duration_minutes', 'created_at', 'updated_at')
         
 class VenudataViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerProfile
-        fields = ('ssid','password', 'code', 'created_at', 'updated_at')
+        fields = ('ssid', 'password', 'code', 'session_duration_minutes', 'created_at', 'updated_at')
         
 class AdsmodelSerializer(serializers.ModelSerializer):
     class Meta:
