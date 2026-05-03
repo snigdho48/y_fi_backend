@@ -1,6 +1,7 @@
 from django.urls import path
 
 from api.view.venueinfo import GetPartnersUser,VenuDetailsView
+from api.view.contact import ContactMessageView
 from .views import *
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -31,6 +32,9 @@ urlpatterns = [
   # Data Collect API
     path('data/collect/', DataCollectView.as_view(), name='data_collect'),
     
+  # Public site (privacy policy is served as a static page on the marketing site, not here)
+    path('contact/', ContactMessageView.as_view(), name='site_contact'),
+
   # Release App API
     path('release/app/', ReleaseAppViewSet.as_view(), name='release_app'),
     path('partner/app/', PartnerAppViewSet.as_view(), name='partner_app'),

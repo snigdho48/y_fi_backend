@@ -83,3 +83,13 @@ class VenuDetailsAdmin(admin.ModelAdmin):
     search_fields = ('id', 'partner__username', 'latitude', 'longitude')
     ordering = ('-created_at',)
 admin.site.register(VenuDetails, VenuDetailsAdmin)
+
+
+class ContactMessageAdmin(admin.ModelAdmin):
+    model = ContactMessage
+    list_display = ('id', 'name', 'email', 'created_at', 'source_ip')
+    search_fields = ('name', 'email', 'message')
+    ordering = ('-created_at',)
+    readonly_fields = ('name', 'email', 'message', 'created_at', 'user_agent', 'source_ip')
+
+admin.site.register(ContactMessage, ContactMessageAdmin)

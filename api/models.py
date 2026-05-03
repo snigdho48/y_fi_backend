@@ -135,3 +135,16 @@ class VenuDetails(models.Model):
     
     def __str__(self):
         return self.partner.username
+
+
+class ContactMessage(models.Model):
+    """Website / app store contact form submissions (unauthenticated)."""
+    name = models.CharField(max_length=200)
+    email = models.EmailField()
+    message = models.TextField()
+    created_at = models.DateTimeField(default=get_current_time, editable=False)
+    user_agent = models.CharField(max_length=512, blank=True, null=True)
+    source_ip = models.GenericIPAddressField(blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.email} @ {self.created_at}'

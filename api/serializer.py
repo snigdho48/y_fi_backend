@@ -255,3 +255,15 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ('id', 'username', 'email')
+
+
+class ContactMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactMessage
+        fields = ('name', 'email', 'message')
+
+    def validate_message(self, value):
+        text = (value or '').strip()
+        if len(text) < 10:
+            raise serializers.ValidationError('Please enter at least 10 characters.')
+        return text
