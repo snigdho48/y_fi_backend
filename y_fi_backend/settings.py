@@ -30,7 +30,13 @@ ALLOWED_HOSTS = ['*']
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
-# CSRF_TRUSTED_ORIGINS = ['http://192.168.107.242','*','https://app.freeyfi.com/']
+# Origins must be scheme + host (+ optional port); no path or trailing slash. Wildcards are not supported.
+CSRF_TRUSTED_ORIGINS = [
+    'https://app.freeyfi.com',
+    'http://192.168.107.242',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 
 # Application definition
 
