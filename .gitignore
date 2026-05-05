@@ -8,7 +8,6 @@ _$py.class
 #  
 /staticfiles/
 /static/
-/media/
 
 
 \*.so
