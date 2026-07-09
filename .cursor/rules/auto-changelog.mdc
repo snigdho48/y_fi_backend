@@ -1,0 +1,15 @@
+---
+description: Auto-update backend changelog and workflow docs after every file change
+alwaysApply: true
+---
+
+# Backend Auto-Changelog
+
+When you edit ANY file under `y_fi_backend/`, automatically before your final response:
+
+1. Prepend to `y_fi_backend/.cursor/workflow/changelog.md` with timestamp `YYYY-MM-DD HH:MM (UTC+6)`
+2. Update `api-reference.md` if endpoints changed
+3. Update `database-flow.md` if models/migrations changed
+4. Update `business-logic.md` if formulas/constants changed
+
+Do not wait for the user to say "update changelog". This is mandatory on every code-changing turn.

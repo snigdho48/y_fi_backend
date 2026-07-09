@@ -1,0 +1,26 @@
+---
+description: Django/Python conventions for y_fi_backend
+globs: y_fi_backend/**/*.py
+alwaysApply: false
+---
+
+# Backend Python Conventions
+
+```python
+# Views: APIView in api/view/, use @extend_schema for OpenAPI
+class MyView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+# Serializers: api/serializer.py — keep dashboard math in PartnerDashboardDataSerializer
+def get_total_income(self, obj):
+    total = obj.aggregate(total=Sum('count'))['total']
+    return round((total or 0) * 0.34, 2)
+
+# Session duration parsing — always clamp
+minutes = max(1, min(10080, int(value or 30)))
+```
+
+- Timezone: `Asia/Dhaka` via `get_current_time()` in models.
+- New endpoints: add to `api/urls.py` + document in `.cursor/workflow/api-reference.md`.
+- Migrations: always create + document in changelog.

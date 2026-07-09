@@ -1,0 +1,30 @@
+---
+description: FreeYFi backend core rules — read workflow docs before any change
+alwaysApply: true
+---
+
+# FreeYFi Backend Rules
+
+## Before coding
+1. Read `y_fi_backend/.cursor/workflow/README.md` and relevant docs.
+2. Check which clients use the endpoint: `y_fi`, `y_fi_partner`, `y_fi_frontend`.
+
+## After coding (automatic — every turn, no user prompt)
+1. Prepend to `.cursor/workflow/changelog.md` with `YYYY-MM-DD HH:MM (UTC+6)`, files, why, API/DB impact.
+2. Update `api-reference.md`, `database-flow.md`, or `business-logic.md` if contracts changed.
+3. See `auto-changelog.mdc` — skipping this makes the task incomplete.
+
+## Architecture
+- Single Django app: `api/`. Logic in `api/view/*.py` + `api/serializer.py`.
+- Do not add unused layers (services/repos) unless explicitly requested.
+- JWT auth via `JWTAuthentication` on protected views. Partner group = lowercase `'partner'`.
+
+## Financial constants
+- Partner income: `total_income = round(total_ad_views × 0.34, 2)` — change only with client coordination.
+- Session duration: clamp `[1, 10080]` minutes, default `30`.
+
+## Multi-model review
+Run parallel `/multi-model-review` before merging changes to: auth, income formula, ad tracking, ConnectedHistory sync, or migrations.
+
+## Do not commit
+- `.env`, credentials, `google-services.json` with secrets, keystore files.
