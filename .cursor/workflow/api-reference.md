@@ -54,6 +54,57 @@
 
 ---
 
+### POST `/auth/admin/login/` — Admin login (Theme Studio)
+
+**Auth:** None  
+**Body:** `{ "email", "password" }`  
+**Requires:** user in `admin` group  
+**Response:** `{ token, username, email, user_group: "admin" }`
+
+---
+
+## Theme (remote app styling)
+
+### GET `/theme/?app=user|partner` — Active theme (public)
+
+**Auth:** None  
+**Response:**
+```json
+{
+  "name": "Default Dark",
+  "app_target": "user",
+  "primary_color": "#191B41",
+  "scaffold_color": "#191B41",
+  "accent_color": "#B2FF59",
+  "on_primary_color": "#FFFFFF",
+  "font_family": "",
+  "background_color": "#191B41",
+  "background_image_url": null,
+  "section_styles": {
+    "home": { "background": "#191B41", "font_color": "#FFFFFF", "heading_color": "#B2FF59" },
+    "login": { "background": "#191B41", "font_color": "#FFFFFF", "heading_color": "#B2FF59" }
+  }
+}
+```
+
+### GET|POST `/admin/theme/` — List / create themes
+
+**Auth:** JWT, group=`admin`
+
+### GET|PATCH|DELETE `/admin/theme/<id>/` — Theme detail
+
+**Auth:** JWT, group=`admin`
+
+### POST `/admin/theme/<id>/activate/` — Set active theme for app_target
+
+**Auth:** JWT, group=`admin`
+
+### GET `/admin/theme/defaults/` — Default section keys and colors
+
+**Auth:** JWT, group=`admin`
+
+---
+
 ## Venue / Wi-Fi (Partner JWT)
 
 ### POST `/venue/data/` — Resolve QR code
